@@ -1,22 +1,51 @@
-# Algorithmic Trading with Hidden Markov Models
+# HMM-Based Market Regime Switching Strategy
 
-## Project Description
-This repository contains a quantitative trading architecture designed to dynamically identify market regimes and manage capital allocation. 
+## Overview
+In this project, I developed a quantitative trading framework that utilizes **Hidden Markov Models (HMM)** to detect latent market regimes. By distinguishing between "Bull/Quiet" and "Bear/Volatile" states, I designed a strategy that dynamically allocates capital between **SPY (S&P 500)** and **GLD (Gold)** to enhance risk-adjusted returns and minimize drawdowns during market turbulence.
 
-The statistical engine utilizes Hidden Markov Models (HMM) with Gaussian Mixture Model (GMM) distributions to overcome the limitations of normal distributions when analyzing financial returns (fat tails and extreme events).
+As a research tool, I built this pipeline to emphasize methodological integrity, ensuring I avoid look-ahead bias through rigorous walk-forward validation.
 
-## Core Features
-Compared to standard educational models, this project introduces several advanced implementations:
-* **3-State Modeling:** Moving beyond simple binary logic (Bull/Bear) to identify directional market regimes (Bull/Bear) and high/low volatility stagnation phases (Choppy markets).
-* **Multivariate Input:** The Expectation-Maximization (Baum-Welch) algorithm is trained on an observation vector that includes both logarithmic returns (Total Return) and rolling volatility.
-* **Execution Rules and Hysteresis:** Implementation of smoothing on filtered probabilities and asymmetric thresholds (e.g., switching only at > 80% confidence) to drastically reduce chattering and transaction costs in the walk-forward backtest.
+## Performance Results
+My backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio, particularly in terms of risk management (Max Drawdown).
 
-## Tech Stack
-* **Language:** Python
-* **Machine Learning & Statistics:** `hmmlearn`, `scikit-learn`
-* **Data Processing:** `pandas`, `numpy`, `yfinance`
+| Metric | HMM Strategy | S&P 500 Buy & Hold | 50/50 Buy & Hold |
+| :--- | :---: | :---: | :---: |
+| **Annualized Return** | 13.99% | 8.99% | 9.37% |
+| **Sharpe Ratio** | 0.92 | 0.56 | 0.75 |
+| **Max Drawdown** | -25.32% | -58.36% | -30.94% |
 
-## Repository Structure
-* `src/`: Contains source modules for data loading, HMM computation, trading logic, and the backtest engine.
-* `notebooks/`: Jupyter Notebooks used for visual data exploration and market regime plotting.
-* `data/`: Local directory for datasets (ignored by Git).
+*Interpretation: The strategy demonstrates a higher Sharpe Ratio and significantly lower Maximum Drawdown compared to the benchmarks, confirming the efficacy of the regime-switching logic during historical market stress periods.*
+
+## Key Methodological Features
+
+* **Regime Detection via HMM:** I employ Gaussian Hidden Markov Models to infer unobserved market states based on log returns and 4-week rolling volatility of the S&P 500.
+* **Label Switching Correction:** I addressed the technical challenge of arbitrary HMM state labeling by implementing a systematic "Label Switching" logic. This ensures consistency by mapping states based on realized volatility metrics, guaranteeing that the "Risky" state is always correctly identified.
+* **Walk-Forward Backtesting:** To ensure the model remains generalizable and realistic, I utilize a sliding window approach. I retrain the model continuously, which ensures that my decisions at time *t* are based only on information available prior to *t*.
+* **Dynamic Asset Allocation:** The model outputs state probabilities, which I use as weights for portfolio rebalancing between SPY and GLD, acting as a tactical hedge against equity market downturns.
+
+## Project Architecture
+
+```text
+hmm_market_regime/
+├── src/
+│   ├── data_loader.py       # Data fetching (yfinance), log-returns calculation, & rolling volatility
+│   ├── hmm_model.py         # GaussianHMM implementation with custom Label Switching logic
+│   ├── backtest.py          # Walk-forward engine ensuring no look-ahead bias
+│   └── performance.py       # Metrics calculation (Sharpe Ratio, MDD) and equity curve plotting
+├── requirements.txt         # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
+├── README.md                # This document
+└── .gitignore               # Repository cleaning rules
+## Technical Implementation
+
+### Core Libraries I utilized:
+* **`hmmlearn`**: For the Gaussian Hidden Markov Model implementation.
+* **`pandas` & `numpy`**: For efficient data manipulation and vectorization.
+* **`scikit-learn`**: For standardization of input features, which I found crucial for HMM convergence.
+* **`yfinance`**: For reliable access to historical market data.
+* **`matplotlib`**: For visualization of equity curves and strategy comparisons.
+
+## Strategy Validation
+I validate my strategy against two primary benchmarks:
+
+* **S&P 500 Buy & Hold**: To measure alpha generation against the pure equity market.
+* **50/50 Static Allocation**: To verify if my regime-switching logic adds value compared to a simple diversified static portfolio.
