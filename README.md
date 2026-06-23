@@ -6,7 +6,7 @@ In this project, I developed a quantitative trading framework that utilizes **Hi
 As a research tool, I built this pipeline to emphasize methodological integrity, ensuring I avoid look-ahead bias through rigorous walk-forward validation.
 
 ## Performance Results
-My backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio.
+My backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio, particularly in terms of risk management (Max Drawdown).
 
 | Metric | HMM Strategy | S&P 500 Buy & Hold | 50/50 Buy & Hold |
 | :--- | :---: | :---: | :---: |
@@ -14,7 +14,7 @@ My backtesting results demonstrate that the HMM strategy significantly outperfor
 | **Sharpe Ratio** | 0.92 | 0.56 | 0.75 |
 | **Max Drawdown** | -25.32% | -58.36% | -30.94% |
 
-*The strategy demonstrates a higher Sharpe Ratio and significantly lower Maximum Drawdown compared to the benchmarks, confirming the efficacy of the regime-switching logic during historical market stress periods.*
+*Interpretation: The strategy demonstrates a higher Sharpe Ratio and significantly lower Maximum Drawdown compared to the benchmarks, confirming the efficacy of the regime-switching logic during historical market stress periods.*
 
 ## Key Methodological Features
 
@@ -25,17 +25,17 @@ My backtesting results demonstrate that the HMM strategy significantly outperfor
 
 ## Project Architecture
 
-'''text
+```text
 hmm_market_regime/
-├── src/
-│   ├── data_loader.py       # Data fetching (yfinance), log-returns calculation, & rolling volatility
-│   ├── hmm_model.py         # GaussianHMM implementation with custom Label Switching logic
-│   ├── backtest.py          # Walk-forward engine ensuring no look-ahead bias
-│   └── performance.py       # Metrics calculation (Sharpe Ratio, MDD) and equity curve plotting
-├── requirements.txt         # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
-├── README.md                # This document
-└── .gitignore               # Repository cleaning rules
-
+- src/
+  - data_loader.py       # Data fetching (yfinance), log-returns calculation, & rolling volatility
+  - hmm_model.py         # GaussianHMM implementation with custom Label Switching logic
+  - backtest.py          # Walk-forward engine ensuring no look-ahead bias
+  - performance.py       # Metrics calculation (Sharpe Ratio, MDD) and equity curve plotting
+- requirements.txt       # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
+- README.md              # This document
+- .gitignore             # Repository cleaning rules
+```
 
 ## Technical Implementation
 
