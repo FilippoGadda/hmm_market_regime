@@ -52,6 +52,43 @@ SPY still leads on raw CAGR (15.02%), and the reason is the window itself: the 2
 * **Dynamic Asset Allocation:** The model outputs state probabilities, which I translate into portfolio weights between SPY and GLD. Portfolio performance is then evaluated on weekly simple returns, while the HMM itself is trained on log returns.
 * **Model Extension Research:** Beyond the original 2-state setup, I also built a 3-state specification to capture a middle market regime and evaluate the tradeoff between return efficiency and drawdown control.
 
+## How to Run
+
+```bash
+# 1. Clone the repository and enter it
+git clone <repo-url>
+cd hmm_market_regime
+
+# 2. Create and activate a virtual environment
+python -m venv venv
+venv\Scripts\Activate.ps1     # Windows (PowerShell)
+source venv/bin/activate      # macOS / Linux
+
+# 3. Install the dependencies
+pip install -r requirements.txt
+```
+
+Then run any of the entry points from the repository root:
+
+```bash
+# 2-state strategy: walk-forward backtest + performance table
+python -m src.performance_metrics
+
+# Save the equity-curve chart (equity_curve.png)
+python -m src.plot_results
+
+# 3-state strategy: walk-forward backtest + performance table
+python -m three_state_model.run_3states
+
+# Compare the 2-state and 3-state models on the same window
+python -m three_state_model.compare_models
+
+# Verify that the walk-forward has no look-ahead bias
+python -m src.test_no_lookahead
+```
+
+> Market data is downloaded automatically from Yahoo Finance on the first run and cached locally, so the initial execution may take a little longer.
+
 ## Project Architecture
 
 ```text
@@ -62,6 +99,7 @@ hmm_market_regime/
   - backtest.py          # Walk-forward engine ensuring no look-ahead bias
   - performance_metrics.py # Metrics calculation (Sharpe Ratio, MDD) and strategy comparison
   - plot_results.py      # Equity curve plotting
+  - test_no_lookahead.py # Test proving the walk-forward has no look-ahead bias
 - three_state_model/
   - hmm_3states.py       # Extended 3-state HMM with low/mid/high-volatility regime mapping
   - backtest_3states.py  # Walk-forward backtest for the 3-state specification
@@ -69,6 +107,7 @@ hmm_market_regime/
   - run_3states.py       # Entry point for the 3-state backtest and metric report
 - requirements.txt       # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
 - README.md              # This document
+- LICENSE                # MIT license
 - .gitignore             # Repository cleaning rules
 ```
 
