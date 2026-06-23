@@ -36,7 +36,10 @@ def fit_hmm_model(df):
     return data
 
 if __name__ == "__main__":
-    from data_loader import download_and_process_data
+    try:
+        from .data_loader import download_and_process_data
+    except ImportError:
+        from data_loader import download_and_process_data
     
     df_market = download_and_process_data()
     df_results = fit_hmm_model(df_market)

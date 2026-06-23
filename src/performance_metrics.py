@@ -7,13 +7,17 @@ def calculate_metrics(strategy_df):
     S&P 500 Buy & Hold, and 50/50 Portfolio.
     """
     # 1. Create columns for HMM Strategy
+    strategy_df = strategy_df.copy()
     strategy_df['CUMULATIVE_STRATEGY'] = (1 + strategy_df['STRATEGY_RETURN']).cumprod()
     
     # 2. Create columns for S&P 500 Benchmark
-    strategy_df['CUMULATIVE_SPY'] = (1 + strategy_df['SPY_RETURN']).cumprod()
+    strategy_df['CUMULATIVE_SPY'] = (1 + strategy_df['SPY_SIMPLE_RETURN']).cumprod()
     
     # 3. Create columns for 50/50 Buy & Hold Benchmark
-    strategy_df['RETURN_50_50'] = (0.5 * strategy_df['SPY_RETURN']) + (0.5 * strategy_df['GLD_RETURN'])
+    strategy_df['RETURN_50_50'] = (
+        (0.5 * strategy_df['SPY_SIMPLE_RETURN']) +
+        (0.5 * strategy_df['GLD_SIMPLE_RETURN'])
+    )
     strategy_df['CUMULATIVE_50_50'] = (1 + strategy_df['RETURN_50_50']).cumprod()
     
     # Helper for Annualized metrics
@@ -32,7 +36,9 @@ def calculate_metrics(strategy_df):
     
     # --- Metrics for S&P 500 ---
     cagr_spy = (strategy_df['CUMULATIVE_SPY'].iloc[-1])**(1/total_years) - 1
-    sharpe_spy = (strategy_df['SPY_RETURN'].mean() / strategy_df['SPY_RETURN'].std()) * np.sqrt(52)
+    sharpe_spy = (
+        strategy_df['SPY_SIMPLE_RETURN'].mean() / strategy_df['SPY_SIMPLE_RETURN'].std()
+    ) * np.sqrt(52)
     mdd_spy = get_max_drawdown(strategy_df['CUMULATIVE_SPY'])
     
     # --- Metrics for 50/50 ---
@@ -59,8 +65,12 @@ def calculate_metrics(strategy_df):
     return strategy_df
 
 if __name__ == "__main__":
-    from data_loader import download_and_process_data
-    from backtest import run_backtest
+    try:
+        from .data_loader import download_and_process_data
+        from .backtest import run_backtest
+    except ImportError:
+        from data_loader import download_and_process_data
+        from backtest import run_backtest
     
     # Run the full pipeline
     market_data = download_and_process_data()

@@ -1,8 +1,12 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from data_loader import download_and_process_data
-from hmm_model import fit_hmm_model
+try:
+    from .data_loader import download_and_process_data
+    from .hmm_model import fit_hmm_model
+except ImportError:
+    from data_loader import download_and_process_data
+    from hmm_model import fit_hmm_model
 
 def run_backtest(df, train_window=104):
     print(f"\nStarting Walk-Forward Backtest (Window: {train_window} weeks)...")
@@ -15,7 +19,7 @@ def run_backtest(df, train_window=104):
         
         # 1. Slice the training data (the past 104 weeks)
         train_slice = df.iloc[i - train_window : i].copy()
-        target_date = train_slice.index[-1]
+        target_date = df.index[i]
         
         # 2. Fit the model on this slice and get probabilities
         res_slice = fit_hmm_model(train_slice)
@@ -43,10 +47,10 @@ def run_backtest(df, train_window=104):
     backtest_df['WEIGHT_GLD'] = backtest_df['Prob_Risky']
     
     # 6. Calculate Strategy Returns
-    # Return = (Weight_SPY * SPY_Return_Next_Week) + (Weight_GLD * GLD_Return_Next_Week)
+    # Return = (Weight_SPY * SPY_Return) + (Weight_GLD * GLD_Return)
     backtest_df['STRATEGY_RETURN'] = (
-        backtest_df['WEIGHT_SPY'] * backtest_df['SPY_RETURN'].shift(-1) +
-        backtest_df['WEIGHT_GLD'] * backtest_df['GLD_RETURN'].shift(-1)
+        backtest_df['WEIGHT_SPY'] * backtest_df['SPY_SIMPLE_RETURN'] +
+        backtest_df['WEIGHT_GLD'] * backtest_df['GLD_SIMPLE_RETURN']
     )
     
     return backtest_df.dropna()
