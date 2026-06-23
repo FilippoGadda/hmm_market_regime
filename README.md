@@ -35,7 +35,7 @@ hmm_market_regime/
 ├── requirements.txt         # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
 ├── README.md                # This document
 └── .gitignore               # Repository cleaning rules
-'''
+
 
 ## Technical Implementation
 
