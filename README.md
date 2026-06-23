@@ -14,7 +14,7 @@ My backtesting results demonstrate that the HMM strategy significantly outperfor
 | **Sharpe Ratio** | 0.92 | 0.56 | 0.75 |
 | **Max Drawdown** | -25.32% | -58.36% | -30.94% |
 
-*Interpretation: The strategy demonstrates a higher Sharpe Ratio and significantly lower Maximum Drawdown compared to the benchmarks, confirming the efficacy of the regime-switching logic during historical market stress periods.*
+*The strategy demonstrates a higher Sharpe Ratio and significantly lower Maximum Drawdown compared to the benchmarks, confirming the efficacy of the regime-switching logic during historical market stress periods.*
 
 ## Key Methodological Features
 
