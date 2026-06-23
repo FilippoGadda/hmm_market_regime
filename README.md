@@ -6,7 +6,7 @@ In this project, I developed a quantitative trading framework that utilizes **Hi
 As a research tool, I built this pipeline to emphasize methodological integrity, ensuring I avoid look-ahead bias through rigorous walk-forward validation.
 
 ## Performance Results
-My backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio, particularly in terms of risk management (Max Drawdown).
+My backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio.
 
 | Metric | HMM Strategy | S&P 500 Buy & Hold | 50/50 Buy & Hold |
 | :--- | :---: | :---: | :---: |
@@ -25,7 +25,7 @@ My backtesting results demonstrate that the HMM strategy significantly outperfor
 
 ## Project Architecture
 
-```text
+'''text
 hmm_market_regime/
 ├── src/
 │   ├── data_loader.py       # Data fetching (yfinance), log-returns calculation, & rolling volatility
@@ -35,6 +35,8 @@ hmm_market_regime/
 ├── requirements.txt         # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
 ├── README.md                # This document
 └── .gitignore               # Repository cleaning rules
+'''
+
 ## Technical Implementation
 
 ### Core Libraries I utilized:
