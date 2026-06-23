@@ -1,7 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from backtest import run_backtest
-from data_loader import download_and_process_data
+try:
+    from .backtest import run_backtest
+    from .data_loader import download_and_process_data
+except ImportError:
+    from backtest import run_backtest
+    from data_loader import download_and_process_data
 
 def plot_equity_lines(df):
     plt.figure(figsize=(12, 6))
@@ -27,7 +31,9 @@ if __name__ == "__main__":
     
     # Calculate cumulative columns required for the plot
     results['CUMULATIVE_STRATEGY'] = (1 + results['STRATEGY_RETURN']).cumprod()
-    results['CUMULATIVE_SPY'] = (1 + results['SPY_RETURN']).cumprod()
-    results['CUMULATIVE_50_50'] = (1 + (0.5 * results['SPY_RETURN'] + 0.5 * results['GLD_RETURN'])).cumprod()
+    results['CUMULATIVE_SPY'] = (1 + results['SPY_SIMPLE_RETURN']).cumprod()
+    results['CUMULATIVE_50_50'] = (
+        1 + (0.5 * results['SPY_SIMPLE_RETURN'] + 0.5 * results['GLD_SIMPLE_RETURN'])
+    ).cumprod()
     
     plot_equity_lines(results)
