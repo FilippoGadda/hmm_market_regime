@@ -7,10 +7,10 @@ To capture these dynamics, I model the market using two features derived from we
 
 From a portfolio construction perspective, the strategy is designed to preserve upside participation during stable conditions while improving resilience during turbulent periods. The goal is to maximize raw return and improve the overall **risk-adjusted profile** of the portfolio by reducing the severity of drawdowns and making allocation decisions conditional on the estimated market environment.
 
-As a research tool, I built the entire pipeline with a strong focus on methodological integrity. The model is retrained through a rigorous **walk-forward** process so that each allocation decision is based only on information that would have been available at that time, helping to avoid look-ahead bias and making the backtest more realistic.
+As a research tool, I built the entire pipeline with a strong focus on methodological integrity. The model is retrained through a rigorous **walk-forward** process so that each allocation decision is based only on information that would have been available at that time, helping to avoid look-ahead bias and making the backtest more realistic. The repository now contains both the original **2-state specification** and an extended **3-state version** designed to capture calm and stressed regimes, and a middle "transition / sideways" environment.
 
 ## Performance Results
-My backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio, particularly in terms of risk management (Max Drawdown).
+For the **2-state model** with a **104-week rolling training window**, my backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio.
 
 | Metric | HMM Strategy | S&P 500 Buy & Hold | 50/50 Buy & Hold |
 | :--- | :---: | :---: | :---: |
@@ -20,12 +20,37 @@ My backtesting results demonstrate that the HMM strategy significantly outperfor
 
 *Interpretation: The strategy improves both absolute and risk-adjusted performance relative to the benchmarks, with the most notable advantage coming from materially lower drawdowns during adverse market environments.*
 
+## Three-State Extension
+After the 2-state model, I extended the framework to a **3-state HMM**. Markets are not always cleanly "favorable" or "defensive": many weeks are transitional, range-bound, or mixed. A third latent state lets the model represent that intermediate environment instead of forcing every week into a binary classification.
+
+I kept the same features, **weekly SPY log returns** and **4-week rolling volatility**, fitted on **both jointly**, so the extension stays directly comparable to the original. Since HMM state labels are arbitrary, I order the estimated states by **realized volatility** and read them as a low-volatility (calm) regime, a mid-volatility (sideways / transition) regime, and a high-volatility (stressed) regime. The three probabilities are then mapped to weights, splitting the mid state evenly so the allocation is always fully invested (weights sum to 1):
+
+* **Weight in SPY** = Prob_Low + 0.5 × Prob_Mid
+* **Weight in GLD** = Prob_High + 0.5 × Prob_Mid
+
+### Why the model specification matters
+
+Going from 2 to 3 states is a different model that must estimate a larger transition matrix and an additional emission distribution. With **full covariance** and two features, the parameter count rises from 13 (2-state) to 23 (3-state). With only ~21 years of weekly data (GLD, the gold ETF, has no history before late 2004), that extra flexibility can easily overfit, so I keep both models on **full covariance**, changing only the number of states, and give the 3-state model a longer **208-week training window** so it has more observations per fit.
+
+To compare fairly, I re-ran both models on the **same 208-week window** and evaluated them on identical out-of-sample dates. A side effect is that the shared period runs from December 12, 2008 to June 19, 2026, so it does not fully include the main leg of the 2008 selloff: the longer window consumes those early observations as training data. The results are:
+
+| Metric | HMM 2 States | HMM 3 States | S&P 500 Buy & Hold | 50/50 Buy & Hold |
+| :--- | :---: | :---: | :---: | :---: |
+| **Annualized Return** | 14.47% | 14.63% | 15.02% | 13.06% |
+| **Sharpe Ratio** | 0.98 | **1.06** | 0.92 | 1.06 |
+| **Max Drawdown** | -19.83% | **-15.50%** | -31.83% | -20.67% |
+
+On this shared window the 3-state model is the strongest risk-adjusted specification. It slightly beats the 2-state model on return (14.63% vs. 14.47%), ties the best **Sharpe ratio (1.06)** — but at a much higher return than the 50/50 mix that matches it — and posts the **lowest maximum drawdown of any strategy (-15.50%)**.
+
+SPY still leads on raw CAGR (15.02%), and the reason is the window itself: the 208-week warm-up pushes the comparison start to December 2008, *after* the worst of the crash, so the test period is almost entirely a strong equity bull market. When stocks rise nearly uninterrupted, any allocation away from equities — into gold or a defensive state — gives up upside, so the asset with the most equity exposure (pure SPY) mechanically wins on raw return. It does so, however, only by carrying roughly double the drawdown (-31.83%) and the weakest Sharpe of the group (0.92). The third state lets the model nearly match equity returns over this bull period while cutting the worst loss almost in half, that is exactly the capital-preservation behavior I wanted from the intermediate regime.
+
 ## Key Methodological Features
 
 * **Regime Detection via HMM:** I employ Gaussian Hidden Markov Models to infer unobserved market states from S&P 500 log returns and 4-week rolling volatility.
-* **Label Switching Correction:** I address the technical challenge of arbitrary HMM state labeling by implementing a systematic label-switching rule based on realized volatility, ensuring the "Risky" state is identified consistently through time.
+* **Label Switching Correction:** I address the technical challenge of arbitrary HMM state labeling by ordering the estimated states by realized volatility, so the regimes (safe vs. risky in the 2-state model, low/mid/high in the 3-state model) are identified consistently through time.
 * **Walk-Forward Backtesting:** To keep the framework realistic and generalizable, I use a sliding training window and continuously retrain the model so that each decision at time *t* depends only on information available before *t*.
 * **Dynamic Asset Allocation:** The model outputs state probabilities, which I translate into portfolio weights between SPY and GLD. Portfolio performance is then evaluated on weekly simple returns, while the HMM itself is trained on log returns.
+* **Model Extension Research:** Beyond the original 2-state setup, I also built a 3-state specification to capture a middle market regime and evaluate the tradeoff between return efficiency and drawdown control.
 
 ## Project Architecture
 
@@ -37,6 +62,11 @@ hmm_market_regime/
   - backtest.py          # Walk-forward engine ensuring no look-ahead bias
   - performance_metrics.py # Metrics calculation (Sharpe Ratio, MDD) and strategy comparison
   - plot_results.py      # Equity curve plotting
+- three_state_model/
+  - hmm_3states.py       # Extended 3-state HMM with low/mid/high-volatility regime mapping
+  - backtest_3states.py  # Walk-forward backtest for the 3-state specification
+  - compare_models.py    # Same-window comparison between 2-state, 3-state, SPY, and 50/50
+  - run_3states.py       # Entry point for the 3-state backtest and metric report
 - requirements.txt       # Dependencies (pandas, hmmlearn, scikit-learn, etc.)
 - README.md              # This document
 - .gitignore             # Repository cleaning rules
