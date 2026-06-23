@@ -1,9 +1,10 @@
-import pandas as pd
 import numpy as np
 from hmmlearn import hmm
 from sklearn.preprocessing import StandardScaler
 
+
 def fit_hmm_model(df):
+    """Fit a 2-state Gaussian HMM and map states by relative volatility."""
     data = df.copy()
     features = data[['SPY_RETURN', 'VOLATILITY']].values
     scaler = StandardScaler()
@@ -35,7 +36,8 @@ def fit_hmm_model(df):
         
     return data
 
-if __name__ == "__main__":
+
+def main():
     try:
         from .data_loader import download_and_process_data
     except ImportError:
@@ -45,5 +47,9 @@ if __name__ == "__main__":
     df_results = fit_hmm_model(df_market)
 
     print(df_results[['SPY_RETURN', 'VOLATILITY', 'Prob_Safe', 'Prob_Risky']].sample(10))
+
+
+if __name__ == "__main__":
+    main()
 
     

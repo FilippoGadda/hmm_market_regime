@@ -8,6 +8,7 @@ venv/
 *.png
 *.csv
 *.pyc
+.cache/
 
 # IDE settings
 .vscode/

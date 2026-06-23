@@ -1,60 +1,66 @@
 import pandas as pd
 import numpy as np
 
-def calculate_metrics(strategy_df):
-    """
-    Calculates key performance metrics and compares HMM Strategy,
-    S&P 500 Buy & Hold, and 50/50 Portfolio.
-    """
-    # 1. Create columns for HMM Strategy
+WEEKS_PER_YEAR = 52
+
+
+def get_max_drawdown(cumulative_returns):
+    peak = cumulative_returns.cummax()
+    drawdown = (cumulative_returns - peak) / peak
+    return drawdown.min()
+
+
+def calculate_cagr(cumulative_returns, periods_per_year=WEEKS_PER_YEAR):
+    total_years = len(cumulative_returns) / periods_per_year
+    return cumulative_returns.iloc[-1] ** (1 / total_years) - 1
+
+
+def calculate_sharpe_ratio(returns, periods_per_year=WEEKS_PER_YEAR):
+    return (returns.mean() / returns.std()) * np.sqrt(periods_per_year)
+
+
+def add_performance_columns(strategy_df):
+    """Add cumulative-return columns for the strategy and benchmarks."""
     strategy_df = strategy_df.copy()
-    strategy_df['CUMULATIVE_STRATEGY'] = (1 + strategy_df['STRATEGY_RETURN']).cumprod()
-    
-    # 2. Create columns for S&P 500 Benchmark
-    strategy_df['CUMULATIVE_SPY'] = (1 + strategy_df['SPY_SIMPLE_RETURN']).cumprod()
-    
-    # 3. Create columns for 50/50 Buy & Hold Benchmark
     strategy_df['RETURN_50_50'] = (
         (0.5 * strategy_df['SPY_SIMPLE_RETURN']) +
         (0.5 * strategy_df['GLD_SIMPLE_RETURN'])
     )
+    strategy_df['CUMULATIVE_STRATEGY'] = (1 + strategy_df['STRATEGY_RETURN']).cumprod()
+    strategy_df['CUMULATIVE_SPY'] = (1 + strategy_df['SPY_SIMPLE_RETURN']).cumprod()
     strategy_df['CUMULATIVE_50_50'] = (1 + strategy_df['RETURN_50_50']).cumprod()
-    
-    # Helper for Annualized metrics
-    total_years = len(strategy_df) / 52
-    
-    # Helper for Max Drawdown
-    def get_max_drawdown(cum_returns):
-        peak = cum_returns.cummax()
-        drawdown = (cum_returns - peak) / peak
-        return drawdown.min()
-    
-    # --- Metrics for HMM Strategy ---
-    cagr_strategy = (strategy_df['CUMULATIVE_STRATEGY'].iloc[-1])**(1/total_years) - 1
-    sharpe_strategy = (strategy_df['STRATEGY_RETURN'].mean() / strategy_df['STRATEGY_RETURN'].std()) * np.sqrt(52)
+    return strategy_df
+
+
+def build_comparison_table(strategy_df):
+    cagr_strategy = calculate_cagr(strategy_df['CUMULATIVE_STRATEGY'])
+    sharpe_strategy = calculate_sharpe_ratio(strategy_df['STRATEGY_RETURN'])
     mdd_strategy = get_max_drawdown(strategy_df['CUMULATIVE_STRATEGY'])
-    
-    # --- Metrics for S&P 500 ---
-    cagr_spy = (strategy_df['CUMULATIVE_SPY'].iloc[-1])**(1/total_years) - 1
-    sharpe_spy = (
-        strategy_df['SPY_SIMPLE_RETURN'].mean() / strategy_df['SPY_SIMPLE_RETURN'].std()
-    ) * np.sqrt(52)
+
+    cagr_spy = calculate_cagr(strategy_df['CUMULATIVE_SPY'])
+    sharpe_spy = calculate_sharpe_ratio(strategy_df['SPY_SIMPLE_RETURN'])
     mdd_spy = get_max_drawdown(strategy_df['CUMULATIVE_SPY'])
-    
-    # --- Metrics for 50/50 ---
-    cagr_50_50 = (strategy_df['CUMULATIVE_50_50'].iloc[-1])**(1/total_years) - 1
-    sharpe_50_50 = (strategy_df['RETURN_50_50'].mean() / strategy_df['RETURN_50_50'].std()) * np.sqrt(52)
+
+    cagr_50_50 = calculate_cagr(strategy_df['CUMULATIVE_50_50'])
+    sharpe_50_50 = calculate_sharpe_ratio(strategy_df['RETURN_50_50'])
     mdd_50_50 = get_max_drawdown(strategy_df['CUMULATIVE_50_50'])
-    
-    # 4. Comparison Table
+
     comparison_data = {
         'Metric': ['Annualized Return', 'Sharpe Ratio', 'Max Drawdown'],
         'Strategy (HMM)': [f"{cagr_strategy:.2%}", f"{sharpe_strategy:.2f}", f"{mdd_strategy:.2%}"],
         'S&P 500': [f"{cagr_spy:.2%}", f"{sharpe_spy:.2f}", f"{mdd_spy:.2%}"],
         '50/50 Buy&Hold': [f"{cagr_50_50:.2%}", f"{sharpe_50_50:.2f}", f"{mdd_50_50:.2%}"]
     }
-    
-    df_comparison = pd.DataFrame(comparison_data)
+    return pd.DataFrame(comparison_data)
+
+
+def calculate_metrics(strategy_df):
+    """
+    Calculates key performance metrics and compares HMM Strategy,
+    S&P 500 Buy & Hold, and 50/50 Portfolio.
+    """
+    strategy_df = add_performance_columns(strategy_df)
+    df_comparison = build_comparison_table(strategy_df)
     
     print("\n" + "="*65)
     print("STRATEGY PERFORMANCE COMPARISON")
@@ -64,7 +70,8 @@ def calculate_metrics(strategy_df):
     
     return strategy_df
 
-if __name__ == "__main__":
+
+def main():
     try:
         from .data_loader import download_and_process_data
         from .backtest import run_backtest
@@ -72,9 +79,10 @@ if __name__ == "__main__":
         from data_loader import download_and_process_data
         from backtest import run_backtest
     
-    # Run the full pipeline
     market_data = download_and_process_data()
     strategy_results = run_backtest(market_data)
-    
-    # Calculate and print
-    final_results = calculate_metrics(strategy_results)
+    calculate_metrics(strategy_results)
+
+
+if __name__ == "__main__":
+    main()
