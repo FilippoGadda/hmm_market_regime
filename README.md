@@ -41,7 +41,7 @@ To compare fairly, I re-ran both models on the **same 208-week window** and eval
 | **Sharpe Ratio** | 0.98 | **1.06** | 0.92 | 1.06 |
 | **Max Drawdown** | -19.83% | **-15.50%** | -31.83% | -20.67% |
 
-On this shared window the 3-state model is the strongest risk-adjusted specification. It slightly beats the 2-state model on return (14.63% vs. 14.47%), ties the best **Sharpe ratio (1.06)** — but at a much higher return than the 50/50 mix that matches it — and posts the **lowest maximum drawdown of any strategy (-15.50%)**.
+On this shared window the 3-state model is the strongest risk-adjusted specification. It slightly beats the 2-state model on return (14.63% vs. 14.47%), ties the best **Sharpe ratio (1.06)**, but at a much higher return than the 50/50 mix that matches it, and posts the **lowest maximum drawdown of any strategy (-15.50%)**.
 
 SPY, in this case, leads on raw CAGR (15.02%), and the reason is the window itself: the 208-week warm-up pushes the comparison start to December 2008, after the worst of the crash, so the test period is almost entirely a strong equity bull market. When stocks rise nearly uninterrupted, any allocation away from equities — into gold or a defensive state — gives up upside, so the asset with the most equity exposure (pure SPY) mechanically wins on raw return. It does so, however, only by carrying roughly double the drawdown (-31.83%) and the weakest Sharpe of the group (0.92). The third state lets the model nearly match equity returns over this bull period while cutting the worst loss almost in half, that is exactly the capital-preservation behavior I wanted from the intermediate regime.
 
