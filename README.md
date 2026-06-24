@@ -7,10 +7,11 @@ To capture these dynamics, I model the market using two features derived from we
 
 From a portfolio construction perspective, the strategy is designed to preserve upside participation during stable conditions while improving resilience during turbulent periods. The goal is to maximize raw return and improve the overall **risk-adjusted profile** of the portfolio by reducing the severity of drawdowns and making allocation decisions conditional on the estimated market environment.
 
-As a research tool, I built the entire pipeline with a strong focus on methodological integrity. The model is retrained through a rigorous **walk-forward** process so that each allocation decision is based only on information that would have been available at that time, helping to avoid look-ahead bias and making the backtest more realistic. The repository now contains both the original **2-state specification** and an extended **3-state version** designed to capture calm and stressed regimes, and a middle "transition / sideways" environment.
+As a research tool, I built the entire pipeline with a strong focus on methodological integrity. The model is retrained through a rigorous **walk-forward** process so that each allocation decision is based only on information that would have been available at that time, helping to avoid look-ahead bias and making the backtest more realistic. 
+The repository includes two variations of the model. The primary **2-state** specification classifies the market into binary calm and stressed regimes. Additionally, I included an extended **3-state** version designed to also capture a middle "transition / sideways" environment.
 
 ## Performance Results
-For the **2-state model** with a **104-week rolling training window**, my backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50/50 portfolio.
+For the **2-state model** with a **104-week rolling training window**, my backtesting results demonstrate that the HMM strategy significantly outperforms both the pure equity benchmark and a static 50% S&P500 / 50% GLD portfolio.
 
 | Metric | HMM Strategy | S&P 500 Buy & Hold | 50/50 Buy & Hold |
 | :--- | :---: | :---: | :---: |
@@ -30,7 +31,7 @@ I kept the same features, **weekly SPY log returns** and **4-week rolling volati
 
 ### Why the model specification matters
 
-Going from 2 to 3 states is a different model that must estimate a larger transition matrix and an additional emission distribution. With **full covariance** and two features, the parameter count rises from 13 (2-state) to 23 (3-state). With only ~21 years of weekly data (GLD, the gold ETF, has no history before late 2004), that extra flexibility can easily overfit, so I keep both models on **full covariance**, changing only the number of states, and give the 3-state model a longer **208-week training window** so it has more observations per fit.
+Going from 2 to 3 states is a different model that must estimate a larger transition matrix and an additional emission distribution. With full covariance and two features, the parameter count rises from 13 (2-state) to 23 (3-state). With only ~21 years of weekly data (GLD, the gold ETF, has no history before late 2004), that extra flexibility can easily overfit, so I keep both models on **full covariance**, changing only the number of states, and give the 3-state model a longer **208-week training window** so it has more observations per fit.
 
 To compare fairly, I re-ran both models on the **same 208-week window** and evaluated them on identical out-of-sample dates. A side effect is that the shared period runs from December 12, 2008 to June 19, 2026, so it does not fully include the main leg of the 2008 selloff: the longer window consumes those early observations as training data. The results are:
 
@@ -42,7 +43,7 @@ To compare fairly, I re-ran both models on the **same 208-week window** and eval
 
 On this shared window the 3-state model is the strongest risk-adjusted specification. It slightly beats the 2-state model on return (14.63% vs. 14.47%), ties the best **Sharpe ratio (1.06)** — but at a much higher return than the 50/50 mix that matches it — and posts the **lowest maximum drawdown of any strategy (-15.50%)**.
 
-SPY still leads on raw CAGR (15.02%), and the reason is the window itself: the 208-week warm-up pushes the comparison start to December 2008, *after* the worst of the crash, so the test period is almost entirely a strong equity bull market. When stocks rise nearly uninterrupted, any allocation away from equities — into gold or a defensive state — gives up upside, so the asset with the most equity exposure (pure SPY) mechanically wins on raw return. It does so, however, only by carrying roughly double the drawdown (-31.83%) and the weakest Sharpe of the group (0.92). The third state lets the model nearly match equity returns over this bull period while cutting the worst loss almost in half, that is exactly the capital-preservation behavior I wanted from the intermediate regime.
+SPY, in this case, leads on raw CAGR (15.02%), and the reason is the window itself: the 208-week warm-up pushes the comparison start to December 2008, after the worst of the crash, so the test period is almost entirely a strong equity bull market. When stocks rise nearly uninterrupted, any allocation away from equities — into gold or a defensive state — gives up upside, so the asset with the most equity exposure (pure SPY) mechanically wins on raw return. It does so, however, only by carrying roughly double the drawdown (-31.83%) and the weakest Sharpe of the group (0.92). The third state lets the model nearly match equity returns over this bull period while cutting the worst loss almost in half, that is exactly the capital-preservation behavior I wanted from the intermediate regime.
 
 ## Key Methodological Features
 
